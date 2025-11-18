@@ -1,52 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import './index.css';
-import dotenv from 'dotenv';
+import { 
+  getBoardListsWithCards,
+  createTask,
+  updateTask,
+  deleteTask,
+  createBoard,
+} from './api/trelloApi';
 
-// Mock API functions - replace these with your actual API imports
-const createTask = async (data) => {
-  const response = await fetch(`${API_BASE}/api/tasks`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!response.ok) throw new Error('Failed to create task');
-  return response.json();
-};
-
-const deleteTask = async (cardId) => {
-  const response = await fetch(`${API_BASE}/api/tasks/${cardId}`, {
-    method: 'DELETE'
-  });
-  if (!response.ok) throw new Error('Failed to delete task');
-  return response.json();
-};
-
-const getBoardListsWithCards = async (boardId) => {
-  const response = await fetch(`${API_BASE}/api/boards/${boardId}/lists`);
-  if (!response.ok) throw new Error('Failed to fetch board');
-  return response.json();
-};
-
-const updateTask = async (cardId, data) => {
-  const response = await fetch(`${API_BASE}/api/tasks/${cardId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!response.ok) throw new Error('Failed to update task');
-  return response.json();
-};
-
-// Configuration - Replace with your actual values
+// Configuration
 const BOARD_ID = import.meta.env.VITE_BOARD_ID;
-const API_BASE = 'https://inscripts-i-private-limited-assignment.onrender.com';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
 export default function App() {
   const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [newCard, setNewCard] = useState({ name: '', desc: '', listId: '' });
+  const [newBoard, setNewBoard] = useState({ name: '', defaultLists: true });
 
   const socket = useMemo(() => io(API_BASE, { transports: ['websocket'] }), []);
 
@@ -147,6 +119,17 @@ export default function App() {
       await load();
     } catch (e) {
       alert(e?.message || 'Move failed');
+    }
+  }
+
+  async function handleCreateBoard() {
+    if (!newBoard.name) return;
+    try {
+      const board = await createBoard({ name: newBoard.name, defaultLists: newBoard.defaultLists });
+      setNewBoard({ name: '', defaultLists: true });
+      alert(`Board created: ${board?.name || 'Unnamed'} (id: ${board?.id || 'N/A'})`);
+    } catch (e) {
+      alert(e?.message || 'Create board failed');
     }
   }
 
@@ -281,7 +264,7 @@ export default function App() {
           <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-lg">
             🎯 Trello Board Manager
           </h1>
-          
+          <p className="text-white/90">Manage cards and create boards</p>
         </header>
 
         {/* Error Message */}
@@ -294,7 +277,34 @@ export default function App() {
           </div>
         )}
 
-        {/* Card Creation Panel */}
+        {/* Board Creation Panel (POST /api/boards) */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 mb-6 animate-fadeInUp">
+          <div className="flex flex-wrap gap-3 items-center">
+            <input
+              placeholder="🧩 New board name"
+              value={newBoard.name}
+              onChange={(e) => setNewBoard((b) => ({ ...b, name: e.target.value }))}
+              className="flex-1 min-w-[220px] px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200 outline-none transition-all"
+            />
+            <label className="flex items-center gap-2 text-white/90">
+              <input
+                type="checkbox"
+                checked={newBoard.defaultLists}
+                onChange={(e) => setNewBoard((b) => ({ ...b, defaultLists: e.target.checked }))}
+                className="w-5 h-5 accent-indigo-600"
+              />
+              <span className="text-gray-800">Create default lists</span>
+            </label>
+            <button
+              onClick={handleCreateBoard}
+              className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl btn-hover"
+            >
+              🚀 Create Board
+            </button>
+          </div>
+        </div>
+
+        {/* Card Creation Panel (POST /api/tasks) */}
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 mb-8 animate-fadeInUp">
           <div className="flex flex-wrap gap-3">
             <select
