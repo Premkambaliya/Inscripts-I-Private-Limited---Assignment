@@ -1,0 +1,83 @@
+{
+  "info": {
+    "name": "Trello Realtime Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Board",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/boards", "host": ["{{base_url}}"], "path": ["api","boards"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Hiring Test Board\",\n  \"defaultLists\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Board Lists + Cards",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/api/boards/{{board_id}}/lists", "host": ["{{base_url}}"], "path": ["api","boards","{{board_id}}","lists"] }
+      }
+    },
+    {
+      "name": "Create Task",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/tasks", "host": ["{{base_url}}"], "path": ["api","tasks"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"listId\": \"<LIST_ID>\",\n  \"name\": \"Task title\",\n  \"desc\": \"Task details\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Update Task",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/tasks/{{card_id}}", "host": ["{{base_url}}"], "path": ["api","tasks","{{card_id}}"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"New title\",\n  \"desc\": \"Updated description\",\n  \"idList\": \"<NEW_LIST_ID>\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Delete Task (archive)",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{base_url}}/api/tasks/{{card_id}}", "host": ["{{base_url}}"], "path": ["api","tasks","{{card_id}}"] }
+      }
+    },
+    {
+      "name": "Create Webhook",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/webhooks", "host": ["{{base_url}}"], "path": ["api","webhooks"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"callbackURL\": \"https://<your-public-host>/webhook\",\n  \"idModel\": \"{{board_id}}\",\n  \"description\": \"Trello RT webhook\"\n}"
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000" },
+    { "key": "board_id", "value": "YOUR_BOARD_ID" },
+    { "key": "card_id", "value": "YOUR_CARD_ID" }
+  ]
+}
