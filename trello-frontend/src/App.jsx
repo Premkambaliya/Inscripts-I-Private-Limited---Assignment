@@ -281,9 +281,7 @@ export default function App() {
           <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-lg">
             🎯 Trello Board Manager
           </h1>
-          <p className="text-white/90 text-sm bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 inline-block">
-            API: {API_BASE}
-          </p>
+          
         </header>
 
         {/* Error Message */}
