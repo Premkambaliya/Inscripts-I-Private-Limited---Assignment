@@ -40,7 +40,7 @@ const updateTask = async (cardId, data) => {
 
 // Configuration - Replace with your actual values
 const BOARD_ID = import.meta.env.VITE_BOARD_ID;
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'https://inscripts-i-private-limited-assignment.onrender.com';
 
 export default function App() {
   const [lists, setLists] = useState([]);
