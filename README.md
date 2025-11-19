@@ -1,29 +1,53 @@
- # Trello Realtime Board (React + Node + Trello API)
+# 🚀 Trello Realtime Board  
+### *(React + Node.js + Socket.IO + Trello API)*
 
- A Trello‑style board with real‑time synchronization using Trello’s REST API, webhooks, and WebSockets.
+A real-time Trello board manager where you can create, update, move, and archive tasks with instant synchronization across all connected clients.  
+This project demonstrates integration with the **Trello REST API**, a **Node.js backend**, and a **React (Vite) frontend** with **Socket.IO** for live updates.
 
- > ⚠️ Important: Do **not** commit your real Trello API key or token. Use `.env` files locally and add them to `.gitignore`.
+---
 
- ---
+## 📘 Postman API Documentation  
+🔗 https://documenter.getpostman.com/view/39187633/2sB3WyHvme
 
- ## Features
+---
 
- - Trello‑like single board UI:
-	 - View lists and cards from a real Trello board.
-	 - Create new cards, rename cards, move cards between lists (by id), and archive cards.
- - Backend proxy to Trello:
-	 - `POST /api/tasks` → create card.
-	 - `PUT /api/tasks/:cardId` → update card (title, description, list).
-	 - `DELETE /api/tasks/:cardId` → Delete card.
-	 - `POST /api/boards` → create Trello board.
-	 - `GET /api/boards/:boardId/lists` → fetch lists with open cards.
- - Real‑time updates:
-	 - WebSocket events via Socket.IO for API actions.
-	 - Trello webhooks push external changes into all connected clients.
+## 🎥 Live Demo  
+🔗 https://inscripts-i-private-limited-assignm.vercel.app/
 
- ---
+---
 
- ## Project Structure
+## 🌐 Backend Deployment  
+🔗 https://inscripts-i-private-limited-assignment.onrender.com/
+
+---
+
+## ⚡ Features
+
+### 🔹 Trello-like Board Interface
+- View lists and cards from a real Trello board  
+- Create new cards  
+- Rename cards  
+- Move cards between lists (via Trello list IDs)  
+- Archive (delete) cards  
+
+### 🔹 Backend Trello API Proxy
+- `POST /api/tasks` → create a card  
+- `PUT /api/tasks/:cardId` → update/move a card  
+- `DELETE /api/tasks/:cardId` → archive a card  
+- `POST /api/boards` → create a Trello board  
+- `GET /api/boards/:boardId/lists` → fetch lists with open cards  
+
+### 🔹 Realtime Updates
+- Socket.IO sends live events for:
+  - `taskCreated`
+  - `taskUpdated`
+  - `taskDeleted`
+  - `boardCreated`
+- Trello Webhooks send external board updates → broadcast to all clients
+
+---
+
+## 📁 Project Structure
 
  ```
  .
@@ -45,34 +69,35 @@
 
  ---
 
- ## Tech Stack
+## 🛠 Tech Stack
 
- - **Frontend**
-	 - React (Vite)
-	 - Axios
-	 - Socket.IO client
- - **Backend**
-	 - Node.js
-	 - Express
-	 - Socket.IO
-	 - Axios
-	 - dotenv, cors
- - **External services**
-	 - Trello REST API (boards, lists, cards, webhooks)
+### **Frontend**
+- React (Vite)
+- TailwindCSS
+- Axios
+- Socket.IO Client
 
- 
+### **Backend**
+- Node.js + Express
+- Socket.IO
+- Axios, dotenv, cors
 
- ### Getting Trello API Key & Token
+### **External Services**
+- Trello REST API (Boards, Lists, Cards, Webhooks)
 
- 1. Log in to Trello.
- 2. Go to the Trello developer/API key page.
- 3. Copy your **API key**.
- 4. Generate a **token** for your application.
- 5. Keep both secret in local `.env` files, never commit them.
+---
 
- ---
+## 🔑 Getting Trello API Key & Token
 
- ## Backend Setup (realtime-backend)
+1. Log in to Trello  
+2. Visit: https://trello.com/app-key  
+3. Copy your **API Key**  
+4. Generate a **Token**  
+5. Store them securely in `.env` — never commit them
+
+---
+
+ ## 🚀Backend Setup (realtime-backend)
 
  1. Go to the backend folder:
 
@@ -120,7 +145,7 @@
 
  ---
 
- ## Frontend Setup (trello-frontend)
+ ## 💻Frontend Setup (trello-frontend)
 
  1. Go to the frontend folder:
 
@@ -158,12 +183,9 @@
  ```
  http://localhost:5173
  ```
-
- > The frontend loads lists and cards from `/api/boards/:boardId/lists`, uses the core task APIs, and connects to the backend websocket to receive realtime updates.
-
  ---
 
- ## Backend API Endpoints
+ ## 📡Backend API Endpoints
 
  All endpoints are relative to `http://localhost:5000`.
 
@@ -257,32 +279,57 @@
 
  ---
 
- ## WebSockets & Real‑Time Behavior
+ ## 🔌WebSockets & Real‑Time Behavior
 
  - Backend: Socket.IO server emits `taskCreated`, `taskUpdated`, `taskDeleted`, `boardCreated`, `webhookEvent`, `trelloEvent`.
  - Frontend: connects with `socket.io-client` and reloads board on incoming events.
 
- ---
+## 🧪 Webhook / Realtime Testing
 
- ## Webhook Setup (public URL)
-
- 1. Start the Frontend:
-
+1. Start both the **backend** and **frontend** servers.
+ 
  ```powershell
  cd trello-frontend
  npm run dev
+ 
  ```
- our server is started and you go on this and i deploy my backend you directly checking on this site
+ our server is started and you go on this and i deploy my 
+ backend you directly checking on this site
+
+2. Open **two browser windows** showing the app.
+
+3. In **Window A**, perform actions such as:
+   - Create a card  
+   - Rename a card  
+   - Move a card between lists  
+   - Archive a card  
+4. **Window B** will update instantly using:
+   - **Socket.IO realtime events**
+   - **Trello Webhook events** pushed through the backend
+   
+
+---
+
+## 📬 Postman Collection
+
+You can test all API endpoints using the included Postman collection.
+
+🔗Postman : **https://documenter.getpostman.com/view/39187633/2sB3WyHvme**
 
  ---
 
- ## Postman Collection
+ ## 📝 Notes
 
- Import `realtime-backend/postman_collection.json` into Postman. Set variables `base_url`, `board_id`, `card_id` and run the requests. and you see my Postman Collection i give the link.
+- **Keep your Trello API key and token private.**  
+  They must be stored in `.env` files and never committed to GitHub.
+- This project is a simplified demonstration and **does not include webhook signature verification**.
+- Built for showcasing **real-time API integrations** using:
+  - Trello REST API  
+  - Socket.IO  
+  - React + Node.js  
+  
 
- Postman : https://documenter.getpostman.com/view/39187633/2sB3WyHvme
-
- ---
+---
 
  ## How to Demo
 
