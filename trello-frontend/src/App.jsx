@@ -123,6 +123,57 @@ export default function App() {
     }
   }
 
+  // Drag & Drop handlers (HTML5)
+  function handleDragStart(e, cardId, fromListId) {
+    // store card id and source list id
+    try {
+      e.dataTransfer.setData('application/json', JSON.stringify({ cardId, fromListId }));
+    } catch (err) {
+      e.dataTransfer.setData('text/plain', `${cardId}|${fromListId}`);
+    }
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  async function handleListDrop(e, targetListId) {
+    e.preventDefault();
+    const raw = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+    if (!raw) return;
+    let payload = null;
+    try { payload = JSON.parse(raw); } catch (err) {
+      const [cardId, fromListId] = raw.split('|');
+      payload = { cardId, fromListId };
+    }
+
+    const { cardId, fromListId } = payload || {};
+    if (!cardId || !fromListId || fromListId === targetListId) return;
+
+    // Optimistic UI: move card locally first
+    let movedCard = null;
+    setLists((prev) => prev.map((l) => {
+      if (l.id === fromListId) {
+        const remaining = (l.cards || []).filter(c => {
+          if (c.id === cardId) { movedCard = c; return false; }
+          return true;
+        });
+        return { ...l, cards: remaining };
+      }
+      if (l.id === targetListId && movedCard) {
+        return { ...l, cards: [ ...(l.cards || []), { ...movedCard, idList: targetListId } ] };
+      }
+      return l;
+    }));
+
+    try {
+      await updateTask(cardId, { idList: targetListId });
+      // refresh authoritative data
+      await load();
+    } catch (err) {
+      // revert by reloading from server
+      await load();
+      alert(err?.message || 'Move (drag) failed');
+    }
+  }
+
   async function handleCreateBoard() {
     if (!newBoard.name) return;
     try {
@@ -351,6 +402,8 @@ export default function App() {
           {lists.map((list, idx) => (
             <div
               key={list.id}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleListDrop(e, list.id)}
               className="list-column flex-shrink-0 w-80 bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-5"
             >
               <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-gray-200">
@@ -366,6 +419,8 @@ export default function App() {
                 {(list.cards || []).map((card) => (
                   <div
                     key={card.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, card.id, list.id)}
                     className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-xl p-4 card-hover shadow-md"
                   >
                     <div className="flex justify-between items-start gap-3 mb-2">
