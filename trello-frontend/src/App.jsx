@@ -1,3 +1,147 @@
+// import { useEffect, useMemo, useState } from 'react';
+// import { io } from 'socket.io-client';
+// import './index.css';
+// import { 
+//   getBoardListsWithCards,
+//   createTask,
+//   updateTask,
+//   deleteTask,
+//   createBoard,
+// } from './api/trelloApi';
+
+// // Configuration
+// const BOARD_ID = import.meta.env.VITE_BOARD_ID;
+// const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+
+// export default function App() {
+//   const [lists, setLists] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState('');
+//   const [newCard, setNewCard] = useState({ name: '', desc: '', listId: '' });
+//   const [newBoard, setNewBoard] = useState({ name: '', defaultLists: true });
+
+//   const socket = useMemo(() => io(API_BASE, { transports: ['websocket'] }), []);
+    
+//     socket.on('trelloEvent', () => load());
+//     socket.on('webhookEvent', () => load());
+//     return () => {
+//       socket.disconnect();
+//     };
+//   }, [socket]);
+
+//   async function handleCreate() {
+//     if (!newCard.name || !newCard.listId) return;
+//     try {
+//       await createTask({ listId: newCard.listId, name: newCard.name, desc: newCard.desc });
+//       setNewCard({ name: '', desc: '', listId: newCard.listId });
+//       await load();
+//     } catch (e) {
+//       alert(e?.message || 'Create failed');
+//     }
+//   }
+
+//   async function handleDelete(cardId) {
+//     if (!confirm('Archive this card?')) return;
+//     try {
+//       await deleteTask(cardId);
+//       await load();
+//     } catch (e) {
+//       alert(e?.message || 'Delete failed');
+//     }
+//   }
+
+//   async function handleRename(cardId) {
+//     const name = prompt('New title?');
+//     if (!name) return;
+//     try {
+//       await updateTask(cardId, { name });
+//       await load();
+//     } catch (e) {
+//       alert(e?.message || 'Update failed');
+//     }
+//   }
+
+//   async function handleMove(cardId) {
+//     const listId = prompt('Move to listId?');
+//     if (!listId) return;
+//     try {
+//       await updateTask(cardId, { idList: listId });
+//       await load();
+//     } catch (e) {
+//       alert(e?.message || 'Move failed');
+//     }
+//   }
+
+//   // Drag & Drop handlers (HTML5)
+//   function handleDragStart(e, cardId, fromListId) {
+//     // store card id and source list id
+//     try {
+//       e.dataTransfer.setData('application/json', JSON.stringify({ cardId, fromListId }));
+//     } catch (err) {
+//       e.dataTransfer.setData('text/plain', `${cardId}|${fromListId}`);
+//     }
+//     e.dataTransfer.effectAllowed = 'move';
+//   }
+
+//   async function handleListDrop(e, targetListId) {
+//     e.preventDefault();
+//     const raw = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+//     if (!raw) return;
+//     let payload = null;
+//     try { payload = JSON.parse(raw); } catch (err) {
+//       const [cardId, fromListId] = raw.split('|');
+//       payload = { cardId, fromListId };
+//     }
+
+//     const { cardId, fromListId } = payload || {};
+//     if (!cardId || !fromListId || fromListId === targetListId) return;
+
+//     // Optimistic UI: move card locally first
+//     let movedCard = null;
+//     setLists((prev) => prev.map((l) => {
+//       if (l.id === fromListId) {
+//         const remaining = (l.cards || []).filter(c => {
+//           if (c.id === cardId) { movedCard = c; return false; }
+//           return true;
+//         });
+//         return { ...l, cards: remaining };
+//       }
+//       if (l.id === targetListId && movedCard) {
+//         return { ...l, cards: [ ...(l.cards || []), { ...movedCard, idList: targetListId } ] };
+//       }
+//       return l;
+//     }));
+
+//     try {
+//       await updateTask(cardId, { idList: targetListId });
+//       // refresh authoritative data
+//       await load();
+//     } catch (err) {
+//       // revert by reloading from server
+//       await load();
+//       alert(err?.message || 'Move (drag) failed');
+//     }
+//   }
+
+//   async function handleCreateBoard() {
+//     if (!newBoard.name) return;
+//     try {
+//       const board = await createBoard({ name: newBoard.name, defaultLists: newBoard.defaultLists });
+//       setNewBoard({ name: '', defaultLists: true });
+//       alert(`Board created: ${board?.name || 'Unnamed'} (id: ${board?.id || 'N/A'})`);
+//     } catch (e) {
+//       alert(e?.message || 'Create board failed');
+//     }
+//   }
+
+//   const handleKeyPress = (e) => {
+//     if (e.key === 'Enter' && !e.shiftKey) {
+//       e.preventDefault();
+//       handleCreate();
+//     }
+//   };
+
+
 import { useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import './index.css';
@@ -20,12 +164,24 @@ export default function App() {
   const [newCard, setNewCard] = useState({ name: '', desc: '', listId: '' });
   const [newBoard, setNewBoard] = useState({ name: '', defaultLists: true });
 
-  const socket = useMemo(() => io(API_BASE, { transports: ['websocket'] }), []);
+  // ✅ FIXED SOCKET — THIS WORKS ON RENDER + VERCEL
+  const socket = useMemo(
+    () =>
+      io(API_BASE, {
+        transports: ["websocket", "polling"],
+        upgrade: true,
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        timeout: 20000,
+        withCredentials: false,
+      }),
+    []
+  );
 
   async function load() {
     if (!BOARD_ID || BOARD_ID === 'your-board-id') {
       setError('BOARD_ID is not configured. Please set your Trello board ID.');
-      // Demo data for preview
       setLists([
         {
           id: '1',
@@ -60,7 +216,6 @@ export default function App() {
       const data = await getBoardListsWithCards(BOARD_ID);
       setLists(data);
       if (!newCard.listId && data[0]?.id) setNewCard((c) => ({ ...c, listId: data[0].id }));
-    //  console.log('Loaded lists:', data);
     } catch (e) {
       setError(e?.message || 'Failed to load board');
     } finally {
@@ -70,12 +225,49 @@ export default function App() {
 
   useEffect(() => {
     load();
-    socket.on('taskCreated', () => load());
-    socket.on('taskUpdated', () => load());
-    socket.on('taskDeleted', () => load());
-    socket.on('trelloEvent', () => load());
-    socket.on('webhookEvent', () => load());
+
+    const addCardToList = (card) => {
+      if (!card || !card.id || !card.idList) return;
+      setLists((prev) => prev.map((l) => l.id === card.idList ? { ...l, cards: [ ...(l.cards||[]).filter(c=>c.id!==card.id), card ] } : l));
+    };
+
+    const updateCardInLists = (card) => {
+      if (!card || !card.id) return;
+      setLists((prev) => prev.map((l) => {
+        const exists = (l.cards || []).some(c => c.id === card.id);
+        if (exists) {
+          if (card.idList && l.id !== card.idList) return { ...l, cards: (l.cards||[]).filter(c => c.id !== card.id) };
+          return { ...l, cards: (l.cards||[]).map(c => c.id === card.id ? { ...c, ...card } : c) };
+        }
+        if (card.idList && l.id === card.idList) return { ...l, cards: [ ...(l.cards||[]), card ] };
+        return l;
+      }));
+    };
+
+    const removeCardById = (cardId) => {
+      if (!cardId) return;
+      setLists((prev) => prev.map((l) => ({ ...l, cards: (l.cards||[]).filter(c => c.id !== cardId) })));
+    };
+
+    socket.on('taskCreated', addCardToList);
+    socket.on('taskUpdated', updateCardInLists);
+    socket.on('taskDeleted', ({ cardId }) => removeCardById(cardId));
+    socket.on('boardCreated', () => { /* no-op here */ });
+    socket.on('trelloEvent', (ev) => {
+      try {
+        if (!ev) return;
+        if (ev.eventType === 'moveCard' && ev.card) updateCardInLists(ev.card);
+        if (ev.eventType === 'archiveCard' && ev.card) removeCardById(ev.card.id);
+        if (ev.eventType === 'updateCardDetails' && ev.card) updateCardInLists(ev.card);
+      } catch (err) { /* ignore */ }
+    });
+
     return () => {
+      socket.off('taskCreated');
+      socket.off('taskUpdated');
+      socket.off('taskDeleted');
+      socket.off('trelloEvent');
+      socket.off('boardCreated');
       socket.disconnect();
     };
   }, [socket]);
@@ -83,9 +275,11 @@ export default function App() {
   async function handleCreate() {
     if (!newCard.name || !newCard.listId) return;
     try {
-      await createTask({ listId: newCard.listId, name: newCard.name, desc: newCard.desc });
+      const card = await createTask({ listId: newCard.listId, name: newCard.name, desc: newCard.desc });
+      if (card && card.id) {
+        setLists((prev) => prev.map((l) => l.id === card.idList ? { ...l, cards: [ ...(l.cards||[]), card ] } : l));
+      }
       setNewCard({ name: '', desc: '', listId: newCard.listId });
-      await load();
     } catch (e) {
       alert(e?.message || 'Create failed');
     }
@@ -95,7 +289,7 @@ export default function App() {
     if (!confirm('Archive this card?')) return;
     try {
       await deleteTask(cardId);
-      await load();
+      setLists((prev) => prev.map((l) => ({ ...l, cards: (l.cards||[]).filter(c => c.id !== cardId) })));
     } catch (e) {
       alert(e?.message || 'Delete failed');
     }
@@ -105,8 +299,10 @@ export default function App() {
     const name = prompt('New title?');
     if (!name) return;
     try {
-      await updateTask(cardId, { name });
-      await load();
+      const updated = await updateTask(cardId, { name });
+      if (updated && updated.id) {
+        setLists((prev) => prev.map((l) => ({ ...l, cards: (l.cards||[]).map(c => c.id === updated.id ? { ...c, ...updated } : c) })));
+      }
     } catch (e) {
       alert(e?.message || 'Update failed');
     }
@@ -116,70 +312,83 @@ export default function App() {
     const listId = prompt('Move to listId?');
     if (!listId) return;
     try {
-      await updateTask(cardId, { idList: listId });
-      await load();
+      const updated = await updateTask(cardId, { idList: listId });
+      if (updated && updated.id) {
+        setLists((prev) => prev.map((l) => {
+          const has = (l.cards||[]).some(c => c.id === updated.id);
+          if (has) return { ...l, cards: (l.cards||[]).filter(c => c.id !== updated.id) };
+          if (l.id === updated.idList) return { ...l, cards: [ ...(l.cards||[]), updated ] };
+          return l;
+        }));
+      }
     } catch (e) {
       alert(e?.message || 'Move failed');
     }
   }
 
-  // Drag & Drop handlers (HTML5)
+  // Drag & Drop
   function handleDragStart(e, cardId, fromListId) {
-    // store card id and source list id
     try {
       e.dataTransfer.setData('application/json', JSON.stringify({ cardId, fromListId }));
-    } catch (err) {
+    } catch {
       e.dataTransfer.setData('text/plain', `${cardId}|${fromListId}`);
     }
-    e.dataTransfer.effectAllowed = 'move';
   }
 
   async function handleListDrop(e, targetListId) {
     e.preventDefault();
-    const raw = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+    let raw = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
     if (!raw) return;
-    let payload = null;
-    try { payload = JSON.parse(raw); } catch (err) {
+
+    let payload;
+    try { payload = JSON.parse(raw); }
+    catch {
       const [cardId, fromListId] = raw.split('|');
       payload = { cardId, fromListId };
     }
 
-    const { cardId, fromListId } = payload || {};
+    const { cardId, fromListId } = payload;
     if (!cardId || !fromListId || fromListId === targetListId) return;
 
-    // Optimistic UI: move card locally first
     let movedCard = null;
-    setLists((prev) => prev.map((l) => {
-      if (l.id === fromListId) {
-        const remaining = (l.cards || []).filter(c => {
-          if (c.id === cardId) { movedCard = c; return false; }
-          return true;
-        });
-        return { ...l, cards: remaining };
-      }
-      if (l.id === targetListId && movedCard) {
-        return { ...l, cards: [ ...(l.cards || []), { ...movedCard, idList: targetListId } ] };
-      }
-      return l;
-    }));
+
+    setLists(prev =>
+      prev.map(l => {
+        if (l.id === fromListId) {
+          const remaining = l.cards.filter(c => {
+            if (c.id === cardId) {
+              movedCard = c;
+              return false;
+            }
+            return true;
+          });
+          return { ...l, cards: remaining };
+        }
+        if (l.id === targetListId && movedCard) {
+          return { ...l, cards: [...l.cards, { ...movedCard, idList: targetListId }] };
+        }
+        return l;
+      })
+    );
 
     try {
       await updateTask(cardId, { idList: targetListId });
-      // refresh authoritative data
-      await load();
-    } catch (err) {
-      // revert by reloading from server
-      await load();
-      alert(err?.message || 'Move (drag) failed');
+      load();
+    } catch {
+      load();
+      alert('Move failed');
     }
   }
 
   async function handleCreateBoard() {
     if (!newBoard.name) return;
     try {
-      const board = await createBoard({ name: newBoard.name, defaultLists: newBoard.defaultLists });
+      const board = await createBoard({
+        name: newBoard.name,
+        defaultLists: newBoard.defaultLists
+      });
       setNewBoard({ name: '', defaultLists: true });
-      alert(`Board created: ${board?.name || 'Unnamed'} (id: ${board?.id || 'N/A'})`);
+      alert(`Board created: ${board?.name} (${board?.id})`);
     } catch (e) {
       alert(e?.message || 'Create board failed');
     }
@@ -311,7 +520,6 @@ export default function App() {
       `}</style>
 
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <header className="text-center mb-10 animate-fadeInDown">
           <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-lg">
             🎯 Trello Board Manager
@@ -319,7 +527,6 @@ export default function App() {
           <p className="text-white/90">Manage cards and create boards</p>
         </header>
 
-        {/* Error Message */}
         {error && (
           <div className="bg-red-500 text-white px-6 py-4 rounded-xl mb-6 shadow-lg animate-shake">
             <div className="flex items-center gap-3">
