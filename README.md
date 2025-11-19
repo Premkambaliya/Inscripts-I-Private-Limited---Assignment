@@ -14,7 +14,7 @@
  - Backend proxy to Trello:
 	 - `POST /api/tasks` → create card.
 	 - `PUT /api/tasks/:cardId` → update card (title, description, list).
-	 - `DELETE /api/tasks/:cardId` → archive card.
+	 - `DELETE /api/tasks/:cardId` → Delete card.
 	 - `POST /api/boards` → create Trello board.
 	 - `GET /api/boards/:boardId/lists` → fetch lists with open cards.
  - Real‑time updates:
@@ -32,7 +32,6 @@
  │  │  ├─ api/
  │  │  │  └─ trelloApi.js # Axios wrapper for backend APIs
  │  │  ├─ App.jsx # Main Trello board UI, websocket client
- │  │  ├─ App.css # Basic board styling
  │  │  ├─ main.jsx # React entrypoint
  │  │  └─ index.css
  │  ├─ package.json
@@ -61,13 +60,7 @@
  - **External services**
 	 - Trello REST API (boards, lists, cards, webhooks)
 
- ---
-
- ## Prerequisites
-
- - Node.js (LTS recommended)
- - A Trello account
- - Trello API key and token
+ 
 
  ### Getting Trello API Key & Token
 
@@ -271,30 +264,23 @@
 
  ---
 
- ## Webhook Setup (ngrok / public URL)
+ ## Webhook Setup (public URL)
 
- 1. Start the backend:
+ 1. Start the Frontend:
 
  ```powershell
- cd realtime-backend
+ cd trello-frontend
  npm run dev
  ```
-
- 2. Expose port 5000 using ngrok:
-
- ```powershell
- ngrok http 5000
- ```
-
- 3. Note the HTTPS URL from ngrok (e.g. `https://abcd-1234.ngrok.app`).
-
- 4. Create the webhook using Postman or curl with `POST /api/webhooks` and body containing the `callbackURL` above and your `board_id`.
+ our server is started and you go on this and i deploy my backend you directly checking on this site
 
  ---
 
  ## Postman Collection
 
- Import `realtime-backend/postman_collection.json` into Postman. Set variables `base_url`, `board_id`, `card_id` and run the requests.
+ Import `realtime-backend/postman_collection.json` into Postman. Set variables `base_url`, `board_id`, `card_id` and run the requests. and you see my Postman Collection i give the link.
+
+ Postman : https://documenter.getpostman.com/view/39187633/2sB3WyHvme
 
  ---
 

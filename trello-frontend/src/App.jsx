@@ -60,6 +60,7 @@ export default function App() {
       const data = await getBoardListsWithCards(BOARD_ID);
       setLists(data);
       if (!newCard.listId && data[0]?.id) setNewCard((c) => ({ ...c, listId: data[0].id }));
+    //  console.log('Loaded lists:', data);
     } catch (e) {
       setError(e?.message || 'Failed to load board');
     } finally {

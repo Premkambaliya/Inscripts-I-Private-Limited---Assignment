@@ -38,6 +38,7 @@ app.post("/api/tasks", async (req, res) => {
     io.emit("taskCreated", response.data);
 
     res.json(response.data);
+    // console.log("Task created:", response.data);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
