@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import './index.css';
-import { 
+import {
   getBoardListsWithCards,
   createTask,
   updateTask,
@@ -127,14 +127,14 @@ export default function App() {
     socket.on('taskCreated', addCardToList);
     socket.on('taskUpdated', updateCardInLists);
     socket.on('taskDeleted', ({ cardId }) => removeCardById(cardId));
-    socket.on('boardCreated', () => {});
+    socket.on('boardCreated', () => { });
     socket.on('trelloEvent', (ev) => {
       try {
         if (!ev) return;
         if (ev.eventType === 'moveCard' && ev.card) updateCardInLists(ev.card);
         if (ev.eventType === 'archiveCard' && ev.card) removeCardById(ev.card.id);
         if (ev.eventType === 'updateCardDetails' && ev.card) updateCardInLists(ev.card);
-      } catch {}
+      } catch { }
     });
 
     return () => {
@@ -408,16 +408,25 @@ export default function App() {
 
         {/* --- MOBILE LIST BUTTONS SECTION --- */}
         <div className="md:hidden mb-4">
-          <div className="flex flex-col gap-3">
+          <div className="
+      flex 
+      flex-row 
+      justify-center 
+      items-center 
+      gap-3 
+      overflow-x-auto 
+      w-full 
+      pb-2
+    "
+          >
             {lists.slice(0, 3).map((list) => (
               <button
                 key={list.id}
                 onClick={() => setActiveMobileList(list.id)}
-                className={`px-4 py-3 rounded-xl font-semibold text-center shadow-md ${
-                  activeMobileList === list.id
+                className={`px-4 py-3 rounded-xl font-semibold text-center whitespace-nowrap shadow-md ${activeMobileList === list.id
                     ? 'bg-indigo-600 text-white'
                     : 'bg-indigo-100 text-indigo-700'
-                }`}
+                  }`}
               >
                 {list.name}
               </button>
