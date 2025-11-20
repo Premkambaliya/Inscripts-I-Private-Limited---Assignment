@@ -12,12 +12,12 @@ This project demonstrates integration with the **Trello REST API**, a **Node.js 
 ---
 
 ## 🎥 Live Demo  
-🔗 https://inscripts-i-private-limited-assignm.vercel.app/
+🔗 https://youtu.be/quXGM7toFuE
 
 ---
 
-## 🌐 Backend Deployment  
-🔗 https://inscripts-i-private-limited-assignment.onrender.com/
+## 🌐 Frontend Deployment  
+🔗 https://inscripts-i-private-limited-assignm.vercel.app/
 
 ---
 
